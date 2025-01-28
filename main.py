@@ -5,16 +5,16 @@ class TimeoutException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self,*args,**kwargs)
 
-def det(Pcr,CR,ps): # output function
-    f=(1-(2.718281828)*(-ps/CR))*100   #   weibull distribution , probability of failure
-    PE = (Pcr - CR) * 100 / Pcr # percentage error
+def det(Pcr,CR,ps):                     # output function
+    f=(1-(2.718281828)*(-ps/CR))*100    #   weibull distribution , probability of failure
+    PE = (Pcr - CR) * 100 / Pcr         # percentage error
     if PE < 0: PE = -1
     print("""Solution:
     Non-linear critical Buckling Load = """ + str(round(CR, 3)) + """ N
     Linear critical buckling load = """ + str(round(Pcr, 3)) + """ N
     Percentage error = """ + str(round(PE, 3)) + """ %
     Probability of failure at front end due to buckling: """+str(round(f,3))+""" %""")
-    exit() #end program
+    exit()                              #end program
 
 def main():
     fname=input("Enter the path of the para-geometry file: ")
@@ -25,26 +25,28 @@ def main():
     l = input("Enter the Length of the Aircraft's body: ")
     z = input("Enter the Height of the Aircraft's body: ")
     y = input("Enter the Width of the Aircraft's body: ")
+
     # ratio of lateral and longitudinal strain
     u = input("Enter the poisson's ratio of material: ")
-    e = input("Enter the young's modulus of the material: ")# stress over strain
+    e = input("Enter the young's modulus of the material: ")    # stress over strain
+    
     # how many divisions for analysis
     ediv = input("Enter the number of element divisions in meshing: ")
 
     p=input("input air density (Kg/m^3): ")
-    v=input("input top airspeed (km/h): ")# max speed
-    cd=input("Input coefficient of drag: ")# friction coefficient
+    v=input("input top airspeed (km/h): ")                      # max speed
+    cd=input("Input coefficient of drag: ")                     # friction coefficient
 
-    prop_stress=float(p)*float(cd)*(float(v)**2)/2 #drag equation,   drag stress
+    prop_stress=float(p)*float(cd)*(float(v)**2)/2              #drag equation,   drag stress
     MI = [(float(l) ** 3 + float(z)) / 12, (float(z) ** 3 + float(l)) / 12, (float(l) ** 3 + float(y)) / 12, (float(y) ** 3 + float(l)) / 12]
-    I = min(MI) #minimum moment of inertia
-    Leq = 2 * float(l) #equivalent length = 2 x length
-    Pcr = (3.141593 * I * float(e)) / (Leq ** 2) #linear critical load
-    l = str(float(l) * 1000) #changing to mm as standard format
+    I = min(MI)                                                 #minimum moment of inertia
+    Leq = 2 * float(l)                                          #equivalent length = 2 x length
+    Pcr = (3.141593 * I * float(e)) / (Leq ** 2)                #linear critical load
+    l = str(float(l) * 1000)                                    #changing to mm as standard format
     z = str(float(z) * 1000)
     y = str(float(y) * 1000)
 
-    filehandle = open('Buckling analysis.inp', 'w') #opening .inp file for write
+    filehandle = open('Buckling analysis.inp', 'w')             #opening .inp file for write
 
     text="""!                               INP file for non-linear buckling of geometry
 /CLEAR
@@ -165,7 +167,7 @@ fini
     print("Analysis Report file found, loading results...\n")
     
     CR = 0
-    time_start = datetime.datetime.now()#storing starting time
+    time_start = datetime.datetime.now()                     #storing starting time
     try:
         while (CR == 0):
             with open('buckling analysis.out', 'r') as file: #opening .out file for read
@@ -179,12 +181,12 @@ fini
                             CR = float(Val[0]) * 10 + float(Val[1])
                         else:
                             CR = float(line)
-                        det(Pcr,CR,prop_stress) # output function
+                        det(Pcr,CR,prop_stress)             # output function
             file.close()
             time_elapsed = datetime.datetime.now() - time_start
             if time_elapsed > datetime.timedelta(seconds=30):
                 raise TimeoutException()
-    except TimeoutException: # in case of error
+    except TimeoutException:                                # in case of error
         time_start = datetime.datetime.now()
         try:
             while(CR==0):
@@ -203,13 +205,13 @@ fini
                 time_elapsed = datetime.datetime.now() - time_start
                 if time_elapsed > datetime.timedelta(seconds=30):
                     raise TimeoutException()
-        except TimeoutException: # in case of error
+        except TimeoutException:                            # in case of error
             print("""No Eigenvalues were converged, an error has occured
 Linear critical buckling load = """ + str(round(Pcr, 3)) + """ N
         """)
             with open('buckling analysis.out', 'r') as file:
                 for line in file:
-                    if ' ERROR ' in line:# print all errors
+                    if ' ERROR ' in line:                   # print all errors
                         for _ in range(1):
                             line = file.readline()
                         print("Error: " + line)
@@ -219,6 +221,6 @@ Linear critical buckling load = """ + str(round(Pcr, 3)) + """ N
 if __name__=='__main__':
     if os.name=='nt':
         os.system('cls')
-    else:
+    else:                                                   # os.name = 'posix'
         os.system('clear')
     main()
